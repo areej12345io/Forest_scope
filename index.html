@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ForestScope – Forest Monitoring &amp; Change Analysis Dashboard</title>
+
+  <!-- Mapbox GL JS -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+
+  <link rel="stylesheet" href="styles/style.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <!-- EXTREME LEFT: heading -->
+    <div class="brand-text">
+      <h1>ForestScope</h1>
+      <p>Forest Monitoring &amp; Change Analysis Dashboard</p>
+    </div>
+
+    <!-- EXTREME RIGHT: logo -->
+    <div class="logo-box">
+      <img src="media/logo_comp.png" alt="ForestScope logo" />
+    </div>
+  </header>
+
+  <main class="map-wrap">
+
+    <!-- Menu button (PNG icon), on the left below the header -->
+    <button id="menu-btn" class="menu-btn" aria-label="Toggle menu"
+            aria-expanded="false" aria-controls="sidebar">
+      <img src="media/menu.png" alt="Menu" onerror="this.replaceWith('☰')" />
+    </button>
+
+    <!-- Side navigation -->
+    <!-- Side navigation -->
+    <nav id="sidebar" class="sidebar" aria-label="Main menu">
+
+      <!-- JRC -->
+      <div class="side-section has-sub">
+        <button class="side-title" aria-expanded="false">
+          JRC Forest Data <span class="chev">▾</span>
+        </button>
+        <div class="side-sub">
+          <button class="sub-btn" data-section="Forest Cover" data-view="map">Map</button>
+          <button class="sub-btn" data-section="Forest Cover" data-view="chart">Chart</button>
+        </div>
+      </div>
+
+      <!-- ForTy -->
+      <div class="side-section has-sub">
+        <button class="side-title" aria-expanded="false">
+          ForTy Forest Data <span class="chev">▾</span>
+        </button>
+        <div class="side-sub">
+          <button class="sub-btn" data-section="Change Analysis" data-view="map">Map</button>
+          <button class="sub-btn" data-section="Change Analysis" data-view="chart">Chart</button>
+        </div>
+      </div>
+
+      <!-- Study area polygons -->
+      <div class="side-section has-sub">
+        <button
+          id="polygon-btn"
+          class="side-title"
+          aria-expanded="false"
+          aria-controls="polygon-submenu"
+        >
+          Study Area Polygons <span class="chev">▾</span>
+        </button>
+
+        <div id="polygon-submenu" class="side-sub">
+          <button
+            id="show-all-polygons-btn"
+            class="sub-btn polygon-layer-btn"
+            type="button"
+          >
+            Complete Polygon Layer
+          </button>
+
+          <div id="subpolygon-list">
+            <p>Loading polygons...</p>
+          </div>
+        </div>
+      </div>
+     <div class="side-section">
+        <button id="agreement-btn" class="side-title" type="button" aria-pressed="false">
+          Dataset Agreement Map
+        </button>
+      </div>
+
+    </nav>
+
+    <!-- ONE chart panel, shared by JRC and ForTy (outside the sidebar) -->
+    <div id="chart-panel" class="chart-panel" hidden>
+      <div class="chart-head">
+        <h2 id="chart-title">Chart</h2>
+        <button id="chart-close" class="chart-close" type="button" aria-label="Close chart">×</button>
+      </div>
+      <div id="chart-tabs" class="chart-tabs"></div>
+      <div class="chart-body"><canvas id="chart-canvas"></canvas></div>
+      <p id="chart-note" class="chart-note"></p>
+    </div>
+
+
+    <div id="agreement-legend" class="agreement-legend" hidden>
+      <h3>JRC vs ForTy at each polygon</h3>
+      <div id="agreement-items"></div>
+      <p class="agreement-note">Agreement is not accuracy. Every polygon is a confirmed forest site, so "neither" marks where both datasets miss it. Click a dot for details.</p>
+    </div>
+
+
+
+
+
+    <div id="map"></div>
+<div id="map-style-control">
+    <button id="map-style-button" title="Change map style">
+    <svg width="18" height="18" viewBox="0 0 24 24"
+         fill="none"
+         stroke="#2f6f4e"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+        <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z"></path>
+        <path d="M9 3v15"></path>
+        <path d="M15 6v15"></path>
+    </svg>
+    </button>
+
+    <div id="map-style-menu">
+        <label>
+            <input type="radio" name="map-style" value="standard-satellite" checked>
+            Satellite
+        </label>
+
+        <label>
+            <input type="radio" name="map-style" value="light-v11">
+            Light
+        </label>
+
+        <label>
+            <input type="radio" name="map-style" value="dark-v11">
+            Dark
+        </label>
+
+        <label>
+            <input type="radio" name="map-style" value="standard">
+            Standard
+        </label>
+
+        <label>
+            <input type="radio" name="map-style" value="outdoors-v12">
+            Outdoors
+        </label>
+    </div>
+</div>
+    <!-- Chart panel (shown when a "Chart" sub-button is clicked) -->
+    <!-- <div id="chart-panel" class="chart-panel" hidden>
+      <h2 id="chart-title">Chart</h2>
+      <p>Your chart goes here.</p>
+    </div>
+
+    <div id="map"></div> -->
+
+
+    <!-- ForestScope AI Assistant - optional Part C feature -->
+    
+    <!-- Optional Part C: ForestScope AI Assistant -->
+     <button
+  id="ai-assistant-toggle"
+  type="button"
+  aria-label="Open ForestScope AI Assistant"
+  aria-controls="ai-assistant-panel"
+  aria-expanded="false"
+  title="ForestScope AI Assistant"
+>
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 3a7 7 0 0 0-7 7v3a3 3 0 0 0 3 3h1v-6H8a4 4 0 0 1 8 0h-1v6h1a3 3 0 0 0 3-3v-3a7 7 0 0 0-7-7Z"/>
+    <path d="M9 19h6M12 16v3"/>
+  </svg>
+</button>
+    <section id="ai-assistant-panel" aria-labelledby="ai-assistant-title">
+      <h2 id="ai-assistant-title">ForestScope AI Assistant</h2>
+      <p>Ask questions about the saved polygon analysis, dataset agreement, and limitations.</p>
+
+      <div id="ai-chat-messages" role="log" aria-live="polite">
+        <p class="ai-message ai-message-system">
+          I answer using the saved ForestScope analysis. Agreement does not establish accuracy.
+        </p>
+      </div>
+
+      <form id="ai-chat-form">
+        <label for="ai-chat-input">Your question</label>
+        <textarea id="ai-chat-input" rows="2" maxlength="1000"
+          placeholder="e.g. What is one limitation of the JRC dataset?" required></textarea>
+        <button id="ai-chat-send" type="submit">Ask</button>
+      </form>
+
+      <p id="ai-chat-status" role="status" aria-live="polite"></p>
+    </section>
+
+
+
+
+
+
+
+
+
+
+
+
+  </main>
+
+  <script src="/config.js"></script>
+  <script src="scripts/script.js"></script>
+  <script src="scripts/chart.js"></script>
+  <script src="scripts/assistant.js"></script>
+</body>
+</html>
